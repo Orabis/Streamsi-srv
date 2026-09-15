@@ -1,0 +1,48 @@
+import express from 'express';
+import multer from 'multer';
+import cors from 'cors';
+
+import { createServer } from 'node:http';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { Server } from 'socket.io';
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'videos/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+})
+const upload = multer({ storage: storage })
+
+const app = express();
+app.use(cors({ origin: '*' }));
+
+const server = createServer(app);
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'PATCH'],
+    }
+});
+
+app.post('/videos-upload', upload.single("video"), function (req, res) {
+    if (!req.file) {
+        return res.status(400).json({ error: "Aucun fichier reçu" });
+    }
+    console.log("Fichier sauvegardé :", req.file.filename);
+    res.status(201).json({ success: "Created"})
+});
+
+io.on('connection', (socket) => {
+    socket.on('message', (msg) => {
+        console.log("video envoyé.. lecture", msg)
+    });
+});
+
+server.listen(3000, () => {
+    console.log('server running at http://localhost:3000');
+});
