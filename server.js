@@ -53,7 +53,7 @@ const io = new Server(server, {
 io.use((socket, next) => {
     const password = socket.handshake.auth.token
 
-    if (password === process.env.GLOBAL_PASSWORD) {
+    if (password === process.env.GLOBAL_TOKEN) {
         return next();
     }
     return next(new Error('Acces Refusé'));
@@ -96,8 +96,6 @@ app.post('/videos-upload', checkAuth, function (req, res) {
         if (!req.file) {
             return res.status(400).json({ error: "Aucun fichier reçu" });
         }
-
-        console.log("Fichier sauvegardé :", req.file.key);
         res.status(201).json({ success: "Created", videoName: req.file.key });
     });
 });
