@@ -49,8 +49,9 @@ app.use(cors({
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: '*',
+        origin: 'https://live-chato.orabis.fr',
         methods: ['GET', 'POST'],
+        allowedHeaders: ['Content-Type', 'Authorization']
     }
 });
 
