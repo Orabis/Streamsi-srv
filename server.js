@@ -40,7 +40,11 @@ const upload = multer({
 })
 
 const app = express();
-app.use(cors({ origin: '*' }));
+app.use(cors({
+    origin: 'https://live-chato.orabis.fr',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 const server = createServer(app);
 const io = new Server(server, {
