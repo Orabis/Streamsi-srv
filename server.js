@@ -114,6 +114,10 @@ app.get('/videos/:id', checkAuth, async (req, res) => {
         res.status(500).json({ error: "Impossible de récupérer la vidéo"})
     }
 })
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
 io.on('connection', (socket) => {
     socket.on('newChat', (msg) => {
         console.log("Vidéo Emis", msg)
@@ -121,6 +125,8 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log('server running at http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+    console.log(`server running at http://localhost:${PORT}`);
 });
