@@ -10,7 +10,7 @@ import {GetObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const s3 = new S3Client({
-    endpoint: `${process.env.S3_IP}:${process.env.S3_PORT}`,
+    endpoint: `${process.env.S3_IP}`,
     region: 'us-east-1',
     credentials: {
         accessKeyId: process.env.S3_ACCESS,
@@ -96,6 +96,7 @@ app.post('/videos-upload', checkAuth, function (req, res) {
                     error: "Le fichier est trop volumineux."
                 });
             }
+	    console.log(err)
             return res.status(500).json({ error: "Erreur lors de l'upload du fichier." });
         }
         if (!req.file) {
