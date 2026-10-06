@@ -9,8 +9,15 @@ import multerS3 from 'multer-s3';
 import {GetObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const s3 = new S3Client({
-    endpoint: `${process.env.S3_IP}:${process.env.S3_PORT}`,
+const s3Local = new S3Client({
+    endpoint: process.env.S3_LOCAL_IP,
+    region: 'us-east-1',
+    credentials: { accessKeyId: process.env.S3_ACCESS, secretAccessKey: process.env.S3_SECRET },
+    forcePathStyle: true
+});
+
+const s3Public = new S3Client({
+    endpoint: process.env.S3_PUBLIC_URL,
     region: 'us-east-1',
     credentials: {
         accessKeyId: process.env.S3_ACCESS,
@@ -21,7 +28,7 @@ const s3 = new S3Client({
 
 const upload = multer({
     storage: multerS3({
-        s3: s3,
+        s3: s3Local,
         bucket: process.env.S3_BUCKET_NAME,
         key: function (req, file, cb) {
             cb(null, file.originalname);
@@ -75,7 +82,18 @@ const checkAuth = (req, res, next) => {
     next();
 }
 
-app.post('/videos-upload', checkAuth, function (req, res) {
+const checkPayloadSize = (req, res, next) => {
+    const contentLength = parseInt(req.headers['content-length'] || '0');
+    const maxSize = 55 * 1024 * 1024;
+    if (contentLength > maxSize) {
+        return res.status(413).json({
+            error: "La requête est trop volumineuse. Le fichier dépasse la limite."
+        });
+    }
+    next();
+};
+
+app.post('/videos-upload', checkAuth, checkPayloadSize, function (req, res) {
     const uploadSingle = upload.single("video");
 
     uploadSingle(req, res, function (err) {
@@ -112,7 +130,7 @@ app.get('/videos/:id', checkAuth, async (req, res) => {
             Bucket: process.env.S3_BUCKET_NAME,
             Key: videoId
         })
-        const url = await getSignedUrl(s3, command, { expiresIn: 3600 })
+        const url = await getSignedUrl(s3Public, command, { expiresIn: 3600 })
         res.json({ url:url })
     } catch (error) {
         console.error("Erreur de la génération du lien : ", error);
